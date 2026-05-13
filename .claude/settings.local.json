@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Path \"C:\\Users\\shiwa\\OneDrive\\Desktop\\microservices-demo\" -Recurse -Directory | Where-Object { $_.Name -match \"kubernetes|k8s|manifests|helm|deploy|charts\" } | Select-Object -ExpandProperty FullName | Sort-Object)",
+      "Bash(grep -E \"\\.ya?ml$\")",
+      "Bash(gitleaks version *)",
+      "Bash(git secrets *)",
+      "Bash(trufflehog --version)",
+      "Bash(choco --version)",
+      "Bash(winget --version)",
+      "Bash(pip --version)",
+      "Bash(choco install *)",
+      "Bash(pip install *)",
+      "Bash(detect-secrets --version)",
+      "Bash(python -m detect_secrets --version)",
+      "Bash(python -m pip install detect-secrets -q)",
+      "Bash(powershell *)",
+      "Bash(/tmp/gitleaks/gitleaks.exe detect *)",
+      "Bash(echo \"EXIT:$?\")",
+      "mcp__opsera__compliance-audit",
+      "Bash(start *)",
+      "mcp__opsera__architecture-analyze",
+      "Bash(xargs wc -l)",
+      "Bash(xargs grep -l \"HorizontalPodAutoscaler\")",
+      "Bash(git -C \"C:/Users/shiwa/OneDrive/Desktop/microservices-demo\" remote get-url origin)",
+      "Bash(git -C \"C:/Users/shiwa/OneDrive/Desktop/microservices-demo\" rev-parse --abbrev-ref HEAD)",
+      "Bash(xargs grep -l \"resources:\")",
+      "Bash(xargs grep -l \"HorizontalPodAutoscaler\\|autoscaling\")",
+      "Bash(git remote *)"
+    ]
+  },
+  "servers": {
+    "opsera": {
+      "type": "http",
+      "url": "https://agent.opsera.ai/mcp"
+    }
+  }
+}

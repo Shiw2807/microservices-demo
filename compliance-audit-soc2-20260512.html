@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="https://agent.opsera.ai/favicon.png">
+  <title>Compliance Audit Report - SOC 2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --primary: #9947EB;
+      --primary-hover: #8234d4;
+      --accent: #CF940C;
+      --bg: #ffffff;
+      --bg-secondary: #F3F3F1;
+      --card: #ffffff;
+      --card-hover: #fafafa;
+      --text: #3D3B36;
+      --text-light: #67788d;
+      --border: #E6E5E3;
+      --border-light: #f0efed;
+      --success: #00AA84;
+      --warning: #CF940C;
+      --danger: #dc3545;
+      --info: #1989F9;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
+      --radius: 0.5rem;
+      --sidebar-width: 260px;
+    }
+    [data-theme="dark"] {
+      --primary: #b87aed;
+      --primary-hover: #a05ee0;
+      --accent: #F0B324;
+      --bg: #16181d;
+      --bg-secondary: #1e2028;
+      --card: #1e2028;
+      --card-hover: #262830;
+      --text: #f2f2f2;
+      --text-light: #a6a6a6;
+      --border: #2e3038;
+      --border-light: #262830;
+      --success: #00CC9E;
+      --warning: #F0B324;
+      --danger: #f06070;
+      --info: #4da6ff;
+      --code-bg: #11111b;
+      --code-text: #cdd6f4;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+      --shadow-md: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.7;
+      -webkit-font-smoothing: antialiased; transition: background 0.3s, color 0.3s;
+    }
+    h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; }
+    h2 { font-size: 1.35rem; font-weight: 600; letter-spacing: -0.01em; color: var(--primary); }
+    h3 { font-size: 1.1rem; font-weight: 600; color: var(--primary); margin-top: 1.25rem; margin-bottom: 0.5rem; }
+    h4 { font-size: 0.95rem; font-weight: 600; color: var(--text); margin-top: 1rem; margin-bottom: 0.4rem; }
+    p { margin-bottom: 0.75rem; }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { color: var(--primary-hover); text-decoration: underline; }
+    ul, ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+    li { margin-bottom: 0.25rem; }
+    .page-wrapper { display: flex; min-height: calc(100vh - var(--header-height, 0px)); }
+    .header ~ .page-wrapper { --header-height: auto; }
+    .sidebar {
+      position: sticky; top: 0; width: var(--sidebar-width); height: 100vh;
+      background: var(--card); border-right: 1px solid var(--border);
+      overflow-y: auto; z-index: 100; display: flex; flex-direction: column;
+      flex-shrink: 0; transition: background 0.3s, border-color 0.3s;
+    }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 0.75rem 0; }
+    .sidebar-nav::-webkit-scrollbar { width: 3px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .sidebar-group-label {
+      padding: 0.6rem 1.25rem 0.3rem; font-size: 0.65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-light);
+    }
+    .sidebar-link {
+      display: block; padding: 0.35rem 1.25rem 0.35rem 1.25rem; font-size: 0.82rem;
+      color: var(--text-light); text-decoration: none; border-left: 3px solid transparent;
+      transition: all 0.15s ease; line-height: 1.4;
+    }
+    .sidebar-link:hover { color: var(--text); background: var(--bg-secondary); text-decoration: none; }
+    .sidebar-link.active {
+      color: var(--primary); border-left-color: var(--primary);
+      background: rgba(153,71,235,0.06); font-weight: 500;
+    }
+    [data-theme="dark"] .sidebar-link.active { background: rgba(184,122,237,0.08); }
+    .sidebar-link.sub { padding-left: 2rem; font-size: 0.78rem; }
+    .sidebar-footer {
+      padding: 0.75rem 1.25rem; border-top: 1px solid var(--border);
+      flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .sidebar-theme-btn {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 999px; padding: 0.4rem; cursor: pointer;
+      display: flex; align-items: center; transition: all 0.2s;
+    }
+    .sidebar-theme-btn:hover { background: var(--card-hover); }
+    .sidebar-theme-btn svg { width: 16px; height: 16px; }
+    .sidebar-theme-btn .sun { display: none; color: var(--accent); }
+    .sidebar-theme-btn .moon { display: block; color: var(--text-light); }
+    [data-theme="dark"] .sidebar-theme-btn .sun { display: block; }
+    [data-theme="dark"] .sidebar-theme-btn .moon { display: none; }
+    .sidebar-theme-label { font-size: 0.75rem; color: var(--text-light); }
+    .sidebar-toggle {
+      display: none; position: fixed; top: 0.75rem; left: 0.75rem; z-index: 200;
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 0.5rem; cursor: pointer; box-shadow: var(--shadow-md);
+    }
+    .sidebar-toggle svg { width: 20px; height: 20px; color: var(--text); }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 90;
+    }
+    .page-main { flex: 1; min-width: 0; }
+    .header {
+      background: linear-gradient(135deg, #250e3c 0%, #9947EB 60%, #CF940C 100%);
+      color: #ffffff; padding: 2.5rem 2rem; position: relative; overflow: hidden;
+    }
+    .header::after {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(153,71,235,0.3) 0%, transparent 70%);
+    }
+    .header-content {
+      max-width: 1100px; margin: 0 auto; display: flex;
+      align-items: center; gap: 1.5rem; position: relative; z-index: 1;
+    }
+    .header-logo { flex-shrink: 0; }
+    .header-logo img { height: 36px; width: auto; }
+    .header-text { flex: 1; }
+    .header h1 { color: #ffffff; margin-bottom: 0.4rem; }
+    .header .meta { opacity: 0.85; font-size: 0.875rem; font-weight: 400; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .section {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2rem; margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm); transition: background 0.3s, border-color 0.3s;
+    }
+    .section h2 {
+      border-bottom: 2px solid var(--primary); padding-bottom: 0.5rem; margin-bottom: 1.25rem;
+    }
+    .act-divider {
+      text-align: center; padding: 1.5rem 0; margin: 1rem 0;
+      font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--text-light);
+      border-top: 2px solid var(--border);
+    }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+    thead th {
+      background: var(--primary); color: #ffffff;
+      padding: 0.65rem 0.75rem; text-align: left;
+      font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    tbody td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border-light); }
+    tbody tr:nth-child(even) { background: var(--bg-secondary); }
+    tbody tr:hover { background: var(--card-hover); }
+    .compliance-score {
+      display: flex; align-items: center; justify-content: center;
+      gap: 3rem; padding: 2rem;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 1.5rem;
+    }
+    .score-ring { position: relative; width: 180px; height: 180px; }
+    .score-ring svg { transform: rotate(-90deg); }
+    .score-ring circle { fill: none; stroke-width: 12; }
+    .score-ring .bg { stroke: var(--border); }
+    .score-ring .progress { stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
+    .score-ring .value {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%); text-align: center;
+    }
+    .score-ring .percentage { font-size: 2.5rem; font-weight: 700; }
+    .score-ring .label { color: var(--text-light); font-size: 0.875rem; }
+    .score-breakdown { text-align: left; }
+    .score-breakdown h3 { margin-bottom: 1rem; color: var(--primary); }
+    .breakdown-item {
+      display: flex; justify-content: space-between;
+      padding: 0.5rem 0; border-bottom: 1px solid var(--border-light);
+    }
+    .breakdown-item:last-child { border-bottom: none; }
+    .status-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .status-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.5rem; text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .status-card .count { font-size: 2.5rem; font-weight: 700; }
+    .status-card .label { color: var(--text-light); font-size: 0.8rem; margin-top: 0.25rem; }
+    .status-card.passing .count { color: var(--success); }
+    .status-card.partial .count { color: var(--warning); }
+    .status-card.failing .count { color: var(--danger); }
+    .control {
+      background: var(--bg-secondary); border-radius: var(--radius);
+      padding: 1rem; margin-bottom: 0.75rem;
+      border-left: 4px solid var(--border);
+    }
+    .control.pass { border-left-color: var(--success); }
+    .control.partial { border-left-color: var(--warning); }
+    .control.fail { border-left-color: var(--danger); }
+    .control-header {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 0.5rem;
+    }
+    .control-id {
+      font-family: 'SF Mono', 'Fira Code', Menlo, monospace;
+      color: var(--primary); font-weight: 600;
+    }
+    .control-title { font-weight: 600; margin-bottom: 0.5rem; }
+    .control-status {
+      padding: 0.2rem 0.65rem; border-radius: 999px;
+      font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+    }
+    .status-pass { background: rgba(0,170,132,0.12); color: var(--success); }
+    .status-partial { background: rgba(207,148,12,0.12); color: var(--warning); }
+    .status-fail { background: rgba(220,53,69,0.12); color: var(--danger); }
+    .evidence-box {
+      background: rgba(25,137,249,0.06); border: 1px solid rgba(25,137,249,0.2);
+      border-radius: var(--radius); padding: 0.75rem; margin-top: 0.75rem; font-size: 0.85rem;
+    }
+    .remediation-box {
+      background: rgba(220,53,69,0.06); border: 1px solid rgba(220,53,69,0.2);
+      border-radius: var(--radius); padding: 0.75rem; margin-top: 0.75rem; font-size: 0.85rem;
+    }
+    .attack-complexity {
+      display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px;
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.04em; vertical-align: middle;
+    }
+    .ac-none { background: rgba(220,53,69,0.12); color: var(--danger); }
+    .ac-low { background: rgba(207,148,12,0.12); color: var(--warning); }
+    .ac-medium { background: rgba(25,137,249,0.12); color: var(--info); }
+    .ac-high { background: rgba(0,170,132,0.12); color: var(--success); }
+    .badge {
+      display: inline-block; padding: 0.2rem 0.65rem; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.03em; vertical-align: middle;
+    }
+    .badge-critical { background: rgba(220,53,69,0.12); color: var(--danger); }
+    .badge-important { background: rgba(207,148,12,0.12); color: var(--warning); }
+    .badge-nice { background: rgba(0,170,132,0.12); color: var(--success); }
+    .badge-info { background: rgba(25,137,249,0.12); color: var(--info); }
+    .severity { padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; }
+    .severity-critical { background: rgba(220,53,69,0.12); color: var(--danger); }
+    .severity-high { background: rgba(207,148,12,0.12); color: var(--warning); }
+    .severity-medium { background: rgba(25,137,249,0.12); color: var(--info); }
+    .sprint-card {
+      border: 2px solid var(--success); border-radius: var(--radius); padding: 1.5rem;
+      margin: 1rem 0; background: var(--bg-secondary);
+    }
+    .sprint-card h4 { color: var(--success); margin-top: 0; }
+    .sprint-card .sprint-meta {
+      font-size: 0.85rem; color: var(--text-light); margin-bottom: 1rem;
+      padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-light);
+    }
+    .sprint-card .pr-description {
+      background: var(--code-bg); color: var(--code-text); padding: 1rem; border-radius: var(--radius);
+      font-family: 'SF Mono', 'Fira Code', Menlo, monospace; font-size: 0.8rem;
+      white-space: pre-wrap; margin-top: 1rem;
+    }
+    .inaction-cost {
+      background: var(--bg-secondary); border-left: 3px solid var(--danger); padding: 0.75rem 1rem;
+      margin: 0.5rem 0; border-radius: 0 var(--radius) var(--radius) 0; font-size: 0.9rem;
+    }
+    .inaction-cost strong { color: var(--danger); }
+    .decision-card {
+      border: 2px solid var(--primary); border-radius: var(--radius); padding: 1.5rem;
+      margin: 1rem 0; background: var(--bg-secondary);
+    }
+    .decision-card h4 { color: var(--primary); margin-top: 0; }
+    .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+    .option-card {
+      border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem;
+      background: var(--card);
+    }
+    .option-card h5 { font-size: 0.9rem; margin-bottom: 0.5rem; }
+    .roadmap-item {
+      display: flex; align-items: flex-start; gap: 1rem;
+      padding: 1rem; background: var(--bg-secondary);
+      border: 1px solid var(--border-light); border-radius: var(--radius); margin-bottom: 0.75rem;
+    }
+    .roadmap-priority {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; color: #ffffff; flex-shrink: 0; font-size: 0.85rem;
+    }
+    .priority-1 { background: var(--danger); }
+    .priority-2 { background: var(--warning); }
+    .priority-3 { background: var(--info); }
+    .checklist-item {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);
+    }
+    .checklist-item:last-child { border-bottom: none; }
+    .check-icon { font-size: 1.1rem; }
+    details { margin: 0.5rem 0; border: 1px solid var(--border-light); border-radius: var(--radius); }
+    details summary {
+      cursor: pointer; font-weight: 600; font-size: 0.95rem; padding: 0.65rem 1rem;
+      background: var(--bg-secondary); border-radius: var(--radius); list-style: none;
+    }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::before { content: "\25B6\FE0E  "; font-size: 0.7rem; margin-right: 0.4rem; }
+    details[open] summary::before { content: "\25BC\FE0E  "; }
+    details[open] summary { border-bottom: 1px solid var(--border-light); border-radius: var(--radius) var(--radius) 0 0; }
+    details > div, details > p, details > ul, details > table { padding: 1rem; }
+    code {
+      background: var(--border-light); padding: 0.15rem 0.4rem; border-radius: 4px;
+      font-family: 'SF Mono', 'Fira Code', 'Fira Mono', Menlo, Consolas, monospace; font-size: 0.85em;
+    }
+    pre {
+      background: var(--code-bg); color: var(--code-text); padding: 1rem 1.25rem;
+      border-radius: var(--radius); overflow-x: auto;
+      font-family: 'SF Mono', 'Fira Code', 'Fira Mono', Menlo, Consolas, monospace;
+      font-size: 0.85rem; line-height: 1.5;
+    }
+    pre:not(.mermaid) { border: 1px solid var(--border); }
+    .footer {
+      text-align: center; padding: 2rem 1rem; color: var(--text-light);
+      font-size: 0.8rem; border-top: 1px solid var(--border); margin-top: 1rem;
+    }
+    .footer-logo { margin-bottom: 0.5rem; }
+    .footer-logo img { height: 24px; width: auto; }
+    .footer-logo .logo-light { display: inline; }
+    .footer-logo .logo-dark { display: none; }
+    [data-theme="dark"] .footer-logo .logo-light { display: none; }
+    [data-theme="dark"] .footer-logo .logo-dark { display: inline; }
+    @media print {
+      .sidebar, .sidebar-toggle, .sidebar-overlay { display: none !important; }
+      .page-wrapper { display: block !important; }
+      body { background: white; }
+      .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .section { break-inside: avoid; box-shadow: none; }
+      .no-print { display: none !important; }
+    }
+    @media (max-width: 900px) {
+      .sidebar { position: fixed; top: 0; left: 0; height: 100vh; transform: translateX(-100%); box-shadow: var(--shadow-md); }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-toggle { display: flex; }
+      .sidebar-overlay.open { display: block; }
+      .page-wrapper { display: block; }
+      .container { padding: 1rem; }
+      .section { padding: 1.25rem; }
+      .option-grid { grid-template-columns: 1fr; }
+      .status-grid { grid-template-columns: 1fr; }
+      table { font-size: 0.8rem; }
+      h1 { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <div class="header-logo">
+        <img src="https://agent.opsera.ai/opsera_logo_white_horizontal.png" alt="Opsera">
+      </div>
+      <div class="header-text">
+        <h1>Compliance Audit Report</h1>
+        <div class="meta">Framework: SOC 2 Type II | Scope: Full (Infrastructure + Application) | Generated: 2026-05-12 | Opsera DevOps Agent</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle navigation">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+    </svg>
+  </button>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="page-wrapper">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-nav" id="sidebarNav">
+        <a class="sidebar-link" href="#executive-summary">Executive Summary</a>
+        <div class="sidebar-group-label">Act 1 — Compliance Posture</div>
+        <a class="sidebar-link sub" href="#compliance-score">Compliance Score</a>
+        <a class="sidebar-link sub" href="#framework-coverage">Framework Coverage</a>
+        <a class="sidebar-link sub" href="#evidence-inventory">Evidence Inventory</a>
+        <div class="sidebar-group-label">Act 2 — Gaps &amp; Findings</div>
+        <a class="sidebar-link sub" href="#failing-controls">Failing Controls</a>
+        <a class="sidebar-link sub" href="#partial-controls">Partial Controls</a>
+        <div class="sidebar-group-label">Act 3 — Remediation</div>
+        <a class="sidebar-link sub" href="#quick-wins">Quick Wins</a>
+        <a class="sidebar-link sub" href="#fix-this-sprint">Fix This Sprint</a>
+        <a class="sidebar-link sub" href="#plan-next-quarter">Plan Next Quarter</a>
+        <a class="sidebar-link sub" href="#decisions">Decisions</a>
+        <a class="sidebar-link sub" href="#audit-readiness">Audit Readiness</a>
+      </div>
+      <div class="sidebar-footer">
+        <button class="sidebar-theme-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+          <svg class="sun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m8.66-13.66l-.71.71M4.05 19.95l-.71.71M21 12h-1M4 12H3m16.66 7.66l-.71-.71M4.05 4.05l-.71-.71M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+          <svg class="moon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.005 9.005 0 0012 21a9.005 9.005 0 008.354-5.646z"/>
+          </svg>
+        </button>
+        <span class="sidebar-theme-label">Toggle theme</span>
+      </div>
+    </nav>
+
+    <div class="page-main">
+      <div class="container">
+
+      <!-- Executive Summary -->
+      <div class="section" id="executive-summary">
+        <h2>Executive Summary</h2>
+        <p><strong>Project:</strong> microservices-demo (Online Boutique) &mdash; 12-service e-commerce microservices application on Google Kubernetes Engine.</p>
+        <p><strong>Overall SOC 2 Compliance Score: <span style="color:var(--danger)">34 / 100</span></strong> &mdash; The application is <strong>not ready for a SOC 2 audit</strong> in its current state. Evidence collection across 7 Trust Services Criteria categories found <strong>4 failing controls</strong>, <strong>3 partial controls</strong>, and <strong>0 fully passing categories</strong>.</p>
+        <p>Three critical gaps dominate the risk profile: (1) unpatched CVSS 9.8 arbitrary code execution in the payment service, (2) no authentication layer on any internal service endpoint, and (3) Kubernetes API tokens auto-mounted on every pod. These three gaps alone would block a SOC 2 audit.</p>
+        <p>On the positive side, the container runtime hardening is strong: all containers run non-root with capabilities dropped, read-only filesystems, and SHA256-pinned base images. GCP Secret Manager is used for database credentials. These controls provide a solid foundation to build on.</p>
+        <p><strong>Estimated remediation timeline to audit-readiness:</strong> 6&ndash;8 weeks with dedicated engineering effort.</p>
+      </div>
+
+      <!-- ACT 1 -->
+      <div class="act-divider" id="act1">Act 1 &mdash; Compliance Posture</div>
+
+      <div class="section" id="compliance-score">
+        <h2>Compliance Score</h2>
+        <div class="compliance-score">
+          <div class="score-ring">
+            <!-- circumference = 2*pi*78 = 490. offset = 490*(1-0.34) = 323.4 -->
+            <svg width="180" height="180">
+              <circle class="bg" cx="90" cy="90" r="78"/>
+              <circle class="progress" cx="90" cy="90" r="78"
+                      stroke="#dc3545"
+                      stroke-dasharray="490"
+                      stroke-dashoffset="323"/>
+            </svg>
+            <div class="value">
+              <div class="percentage" style="color:#dc3545;">34%</div>
+              <div class="label">Compliant</div>
+            </div>
+          </div>
+          <div class="score-breakdown">
+            <h3>SOC 2 Categories</h3>
+            <div class="breakdown-item"><span>Access Control (CC6)</span><span style="color:var(--danger)">28 / 100 ❌</span></div>
+            <div class="breakdown-item"><span>Encryption &amp; Data Protection (CC6.7/6.8)</span><span style="color:var(--warning)">42 / 100 ⚠️</span></div>
+            <div class="breakdown-item"><span>Logging &amp; Monitoring (CC7.2)</span><span style="color:var(--danger)">30 / 100 ❌</span></div>
+            <div class="breakdown-item"><span>Change Management (CC8.1)</span><span style="color:var(--warning)">52 / 100 ⚠️</span></div>
+            <div class="breakdown-item"><span>Vulnerability Management (CC7.1)</span><span style="color:var(--danger)">38 / 100 ❌</span></div>
+            <div class="breakdown-item"><span>Business Continuity (A1.2)</span><span style="color:var(--danger)">18 / 100 ❌</span></div>
+            <div class="breakdown-item"><span>Policies &amp; Documentation (CC2.2)</span><span style="color:var(--warning)">28 / 100 ⚠️</span></div>
+          </div>
+        </div>
+        <div class="status-grid">
+          <div class="status-card passing">
+            <div class="count">0</div>
+            <div class="label">Passing Controls</div>
+          </div>
+          <div class="status-card partial">
+            <div class="count">3</div>
+            <div class="label">Partial Controls</div>
+          </div>
+          <div class="status-card failing">
+            <div class="count">4</div>
+            <div class="label">Failing Controls</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" id="framework-coverage">
+        <h2>Framework Coverage</h2>
+        <table>
+          <thead><tr><th>SOC 2 Category</th><th>Controls Tested</th><th>Status</th><th>Score</th><th>Key Gap</th></tr></thead>
+          <tbody>
+            <tr><td>CC6 &mdash; Logical Access Controls</td><td>CC6.1, CC6.2, CC6.3, CC6.6</td><td><span class="badge badge-critical">Failing</span></td><td>28</td><td>No auth on any endpoint; SA tokens auto-mounted</td></tr>
+            <tr><td>CC6.7/6.8 &mdash; Encryption</td><td>CC6.7, CC6.8</td><td><span class="badge badge-important">Partial</span></td><td>42</td><td>HTTP:80 external; no mTLS; PGPASSWORD in global scope</td></tr>
+            <tr><td>CC7.2 &mdash; Logging &amp; Monitoring</td><td>CC7.2, CC7.3</td><td><span class="badge badge-critical">Failing</span></td><td>30</td><td>No audit logging; no SIEM; observability is opt-in</td></tr>
+            <tr><td>CC8.1 &mdash; Change Management</td><td>CC8.1</td><td><span class="badge badge-important">Partial</span></td><td>52</td><td>No SAST/dep scanning in CI; ACTIONS_ALLOW_UNSECURE_COMMANDS</td></tr>
+            <tr><td>CC7.1 &mdash; Vulnerability Management</td><td>CC7.1</td><td><span class="badge badge-critical">Failing</span></td><td>38</td><td>CVSS 9.8 unpatched; SQL injection; no container scanning</td></tr>
+            <tr><td>A1.2 &mdash; Availability / BC</td><td>A1.2, A1.3</td><td><span class="badge badge-critical">Failing</span></td><td>18</td><td>Redis emptyDir; no backups; no DR plan; single replicas</td></tr>
+            <tr><td>CC2.2 &mdash; Policies &amp; Docs</td><td>CC2.2</td><td><span class="badge badge-important">Partial</span></td><td>28</td><td>No IRP; no formal security policy; no data classification</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section" id="evidence-inventory">
+        <h2>Evidence Inventory</h2>
+        <table>
+          <thead><tr><th>Category</th><th>Status</th><th>Evidence Collected</th></tr></thead>
+          <tbody>
+            <tr><td>Kubernetes manifests (12 services)</td><td><span class="badge badge-nice">Collected</span></td><td>kubernetes-manifests/*.yaml</td></tr>
+            <tr><td>Dockerfiles (all services)</td><td><span class="badge badge-nice">Collected</span></td><td>src/*/Dockerfile</td></tr>
+            <tr><td>GitHub Actions CI/CD</td><td><span class="badge badge-nice">Collected</span></td><td>.github/workflows/ci-pr.yaml, ci-main.yaml</td></tr>
+            <tr><td>Dependency audit (npm)</td><td><span class="badge badge-nice">Collected</span></td><td>src/paymentservice/package.json &mdash; 20 vulns (5 critical)</td></tr>
+            <tr><td>Network policies</td><td><span class="badge badge-nice">Collected</span></td><td>kustomize/components/network-policies/ (opt-in only)</td></tr>
+            <tr><td>Source code (security-relevant)</td><td><span class="badge badge-nice">Collected</span></td><td>AlloyDBCartStore.cs, shoppingassistantservice.py</td></tr>
+            <tr><td>Security policy</td><td><span class="badge badge-nice">Collected</span></td><td>.github/SECURITY.md (disclosure process only)</td></tr>
+            <tr><td>Secrets scan (gitleaks)</td><td><span class="badge badge-nice">Collected</span></td><td>2,392 commits scanned &mdash; 0 findings</td></tr>
+            <tr><td>Penetration test results</td><td><span class="badge badge-critical">Missing</span></td><td>Not found in repository</td></tr>
+            <tr><td>Incident response plan</td><td><span class="badge badge-critical">Missing</span></td><td>Not found in repository</td></tr>
+            <tr><td>DR / BCP documentation</td><td><span class="badge badge-critical">Missing</span></td><td>Not found in repository</td></tr>
+            <tr><td>Data classification policy</td><td><span class="badge badge-critical">Missing</span></td><td>Not found in repository</td></tr>
+            <tr><td>Security training records</td><td><span class="badge badge-critical">Missing</span></td><td>Not found in repository</td></tr>
+            <tr><td>Access review logs</td><td><span class="badge badge-critical">Missing</span></td><td>Not found in repository</td></tr>
+            <tr><td>Vendor / third-party risk assessment</td><td><span class="badge badge-critical">Missing</span></td><td>Not found in repository</td></tr>
+          </tbody>
+        </table>
+        <h3>Passing Highlights</h3>
+        <ul>
+          <li>All containers run as non-root (UID 1000, <code>runAsNonRoot: true</code>)</li>
+          <li><code>capabilities.drop: [ALL]</code> and <code>allowPrivilegeEscalation: false</code> on every container</li>
+          <li><code>readOnlyRootFilesystem: true</code> on all containers</li>
+          <li>All Dockerfile base images pinned to SHA256 digests</li>
+          <li>AlloyDB passwords fetched from GCP Secret Manager (not hardcoded in source)</li>
+          <li>Dedicated ServiceAccounts per service (11 of 12 workloads)</li>
+          <li>NetworkPolicies with deny-all default available as kustomize component</li>
+          <li>Resource limits (CPU + memory) set on all deployments</li>
+          <li>CI deploys to isolated PR namespaces for staging</li>
+          <li>Gitleaks scan: 0 secrets found in 2,392 commits</li>
+        </ul>
+      </div>
+
+      <!-- ACT 2 -->
+      <div class="act-divider" id="act2">Act 2 &mdash; Gaps &amp; Findings</div>
+
+      <div class="section" id="failing-controls">
+        <h2>Failing Controls</h2>
+
+        <!-- FINDING 1 -->
+        <div class="control fail">
+          <div class="control-header">
+            <span><span class="control-id">CC7.1</span> &mdash; Vulnerability Detection &amp; Remediation</span>
+            <span class="severity severity-critical">Critical</span>
+          </div>
+          <p><strong>File:</strong> <code>src/paymentservice/package.json</code>, <code>src/cartservice/src/cartstore/AlloyDBCartStore.cs:69</code></p>
+          <p>The payment service carries a <strong>CVSS 9.8 arbitrary code execution vulnerability</strong> in <code>protobufjs &lt; 7.5.5</code> (GHSA-xq3m-2v4x-88gg) — unpatched and reachable at runtime. Five additional critical CVEs exist in the same transitive dependency tree. Separately, a SQL injection vulnerability in <code>AlloyDBCartStore.cs:69</code> directly interpolates user-supplied <code>userId</code> and <code>productId</code> into raw SQL without parameterization. No dependency scanning, SAST, or container image scanning runs in the CI pipeline.</p>
+          <div class="evidence-box">
+            <strong>Evidence:</strong> npm audit: 5 critical, 6 high CVEs in paymentservice. protobufjs CVSS 9.8 (CWE-94). tar CVSS 8.2 path traversal. jws CVSS 7.5 HMAC bypass. SQL string interpolation confirmed at AlloyDBCartStore.cs:69.
+          </div>
+          <p><span class="attack-complexity ac-none">No barrier</span> &nbsp; Attacker with network access to paymentservice can trigger RCE via malformed protobuf. SQL injection is exploitable by any authenticated frontend user.</p>
+          <p><strong>Framework mapping:</strong> SOC2 CC7.1, CC7.3 | ISO 27001 A.12.6 | PCI-DSS 6.3.3</p>
+          <div class="remediation-box">
+            <strong>Fix:</strong> (1) Upgrade <code>@opentelemetry/sdk-node</code> to 0.217.0. (2) Downgrade <code>@google-cloud/profiler</code> to 0.1.4. (3) Replace <code>@opentelemetry/exporter-otlp-grpc</code> with HTTP exporter. (4) Parameterize all SQL in AlloyDBCartStore.cs using <code>NpgsqlCommand</code> with <code>@param</code> placeholders. (5) Add <code>npm audit --audit-level=high</code> and Trivy image scan to CI pipeline.
+          </div>
+        </div>
+
+        <!-- FINDING 2 -->
+        <div class="control fail">
+          <div class="control-header">
+            <span><span class="control-id">CC6.1</span> &mdash; Logical Access Controls &amp; Authentication</span>
+            <span class="severity severity-critical">Critical</span>
+          </div>
+          <p><strong>File:</strong> <code>kubernetes-manifests/frontend.yaml:123</code> (all services)</p>
+          <p>No authentication or authorization is enforced on any service endpoint. All 12 microservices accept unauthenticated connections. The frontend is exposed externally over <strong>HTTP port 80 with no TLS</strong>. Inter-service gRPC calls carry no auth tokens. No API gateway or service mesh auth policy is configured in the base deployment.</p>
+          <div class="evidence-box">
+            <strong>Evidence:</strong> frontend-external Service type LoadBalancer, port 80 (frontend.yaml:130). No auth middleware found in any service source. Istio mTLS is opt-in overlay only (kustomize/components/service-mesh-istio/). No AuthorizationPolicies defined anywhere.
+          </div>
+          <p><span class="attack-complexity ac-none">No barrier</span> &nbsp; Any pod inside the cluster can call any service without credentials. A compromised loadgenerator has a direct network path to paymentservice:50051.</p>
+          <p><strong>Framework mapping:</strong> SOC2 CC6.1, CC6.6 | ISO 27001 A.9.1 | PCI-DSS 8.2</p>
+          <div class="remediation-box">
+            <strong>Fix:</strong> (1) Enable Istio service mesh with <code>PeerAuthentication: STRICT</code> mTLS. (2) Add <code>AuthorizationPolicy</code> per service. (3) Terminate TLS at the load balancer or ingress controller. (4) Enable <code>authorizationPolicies.create: true</code> in Helm chart values.
+          </div>
+        </div>
+
+        <!-- FINDING 3 -->
+        <div class="control fail">
+          <div class="control-header">
+            <span><span class="control-id">CC6.2</span> &mdash; Kubernetes API Token Auto-Mount</span>
+            <span class="severity severity-critical">Critical</span>
+          </div>
+          <p><strong>File:</strong> All <code>kubernetes-manifests/*.yaml</code> ServiceAccount resources</p>
+          <p>Every pod in the cluster automatically mounts a Kubernetes ServiceAccount JWT token at <code>/var/run/secrets/kubernetes.io/serviceaccount/token</code>. No ServiceAccount sets <code>automountServiceAccountToken: false</code>. A compromised container can use this token to authenticate to the Kubernetes API server and enumerate Secrets, modify resources, or escalate privileges depending on cluster RBAC state.</p>
+          <div class="evidence-box">
+            <strong>Evidence:</strong> grep for <code>automountServiceAccountToken</code> returns 0 results across all manifests. redis-cart Deployment has no <code>serviceAccountName</code> — falls back to the <code>default</code> ServiceAccount.
+          </div>
+          <p><span class="attack-complexity ac-low">Low complexity</span> &nbsp; Requires initial container compromise, then trivial API calls using the mounted token.</p>
+          <p><strong>Framework mapping:</strong> SOC2 CC6.2, CC6.3 | CIS K8s 5.1.6 | ISO 27001 A.9.2</p>
+          <pre>--- a/kubernetes-manifests/paymentservice.yaml
++++ b/kubernetes-manifests/paymentservice.yaml
+ apiVersion: v1
+ kind: ServiceAccount
+ metadata:
+   name: paymentservice
++automountServiceAccountToken: false
+---
+ spec:
+   serviceAccountName: paymentservice
++  automountServiceAccountToken: false</pre>
+          <div class="remediation-box">
+            <strong>Fix:</strong> Add <code>automountServiceAccountToken: false</code> to all 12 ServiceAccount resources and all 12 Deployment pod specs. Add a dedicated ServiceAccount for redis-cart.
+          </div>
+        </div>
+
+        <!-- FINDING 4 -->
+        <div class="control fail">
+          <div class="control-header">
+            <span><span class="control-id">CC7.2</span> &mdash; Audit Logging &amp; Security Monitoring</span>
+            <span class="severity severity-high">High</span>
+          </div>
+          <p><strong>File:</strong> <code>kustomize/components/google-cloud-operations/</code> (opt-in only)</p>
+          <p>There is no audit trail for security-relevant events: checkout transactions, authentication failures, configuration changes, or pod lifecycle events. OpenTelemetry observability exists only as an optional kustomize overlay. The base deployment has no logging pipeline, no SIEM integration, no alerting, and no log retention policy. SOC 2 requires evidence of security event monitoring and response capability.</p>
+          <div class="evidence-box">
+            <strong>Evidence:</strong> google-cloud-operations component not in base kustomization.yaml. No CloudWatch/Datadog/Splunk integration. No structured audit log emitter in checkout or payment flow. Helm value <code>googleCloudOperations.tracing: false</code>.
+          </div>
+          <p><span class="attack-complexity ac-none">No barrier</span> &nbsp; Breaches go undetected. No forensic evidence available post-incident. Fails SOC 2 CC7.2 evidence requirement.</p>
+          <p><strong>Framework mapping:</strong> SOC2 CC7.2, CC7.3 | ISO 27001 A.12.4 | PCI-DSS 10.2</p>
+          <div class="remediation-box">
+            <strong>Fix:</strong> (1) Promote google-cloud-operations overlay into base manifests. (2) Enable structured audit logging in checkout and payment flows. (3) Define log retention policy (minimum 90 days online, 1 year archived for SOC 2). (4) Set up alerting on error rate spikes and authentication anomalies.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="section" id="partial-controls">
+        <h2>Partial Controls</h2>
+
+        <!-- PARTIAL 1 -->
+        <div class="control partial">
+          <div class="control-header">
+            <span><span class="control-id">CC6.7</span> &mdash; Encryption in Transit &amp; CC6.8 Encryption at Rest</span>
+            <span class="severity severity-high">High</span>
+          </div>
+          <p><strong>Passing:</strong> AlloyDB passwords retrieved from GCP Secret Manager. Dockerfile base images SHA256-pinned.</p>
+          <p><strong>Failing:</strong> External traffic unencrypted over HTTP:80. No mTLS between microservices (Istio opt-in). Redis cart data on <code>emptyDir</code> with no encryption. <code>PGPASSWORD</code> stored as a module-level Python global. Hardcoded <code>postgres</code> superuser in both AlloyDB integrations.</p>
+          <p><strong>Framework mapping:</strong> SOC2 CC6.7, CC6.8 | PCI-DSS 4.2.1 | ISO 27001 A.10.1</p>
+        </div>
+
+        <!-- PARTIAL 2 -->
+        <div class="control partial">
+          <div class="control-header">
+            <span><span class="control-id">CC8.1</span> &mdash; Change Management &amp; CI/CD Pipeline</span>
+            <span class="severity severity-high">High</span>
+          </div>
+          <p><strong>Passing:</strong> GitHub Actions CI on all PRs. Isolated PR namespaces for staging. Go and C# unit tests. Skaffold-based reproducible builds.</p>
+          <p><strong>Failing:</strong> <code>ACTIONS_ALLOW_UNSECURE_COMMANDS: true</code> in both workflow files (deprecated, allows env injection). No SAST, no dependency scanning, no container image scanning. Python, Node.js, and Java services have zero unit test coverage in CI. GitHub Actions pinned to major version tags, not SHA digests.</p>
+          <p><strong>Framework mapping:</strong> SOC2 CC8.1 | ISO 27001 A.14.2 | SLSA Level 1</p>
+        </div>
+
+        <!-- PARTIAL 3 -->
+        <div class="control partial">
+          <div class="control-header">
+            <span><span class="control-id">CC2.2</span> &mdash; Policies, Documentation &amp; Business Continuity</span>
+            <span class="severity severity-high">High</span>
+          </div>
+          <p><strong>Passing:</strong> SECURITY.md with vulnerability disclosure process. CONTRIBUTING.md. Terraform IaC in version control.</p>
+          <p><strong>Failing:</strong> No formal information security policy. No incident response plan. No data classification policy. No vendor/third-party risk assessment. Redis cart data on <code>emptyDir</code> — lost on pod restart. No backup strategy. No DR documentation. No RTO/RPO targets. All services run as single replicas with no HPA.</p>
+          <p><strong>Framework mapping:</strong> SOC2 CC2.2, A1.2, A1.3 | ISO 27001 A.5.1, A.17.1</p>
+        </div>
+
+      </div>
+
+      <!-- ACT 3 -->
+      <div class="act-divider" id="act3">Act 3 &mdash; Remediation &amp; Roadmap</div>
+
+      <div class="section" id="quick-wins">
+        <h2>Quick Wins &mdash; Fix Today</h2>
+        <div class="sprint-card">
+          <h4>Sprint: 5 fixes, ~90 minutes total</h4>
+          <div class="sprint-meta">These changes can be made in a single PR. Each fix is a manifest or config edit with no architectural changes required.</div>
+
+          <h4>Fix 1: Disable SA token auto-mount (~20 min)</h4>
+          <pre>--- a/kubernetes-manifests/paymentservice.yaml
++++ b/kubernetes-manifests/paymentservice.yaml
+ apiVersion: v1
+ kind: ServiceAccount
+ metadata:
+   name: paymentservice
++automountServiceAccountToken: false
+ ---
+ spec:
+   serviceAccountName: paymentservice
++  automountServiceAccountToken: false
+   securityContext:
+     fsGroup: 1000</pre>
+
+          <h4>Fix 2: Add seccomp RuntimeDefault to all pods (~15 min)</h4>
+          <pre>--- a/kubernetes-manifests/frontend.yaml
++++ b/kubernetes-manifests/frontend.yaml
+ spec:
+   securityContext:
+     fsGroup: 1000
+     runAsGroup: 1000
+     runAsNonRoot: true
+     runAsUser: 1000
++    seccompProfile:
++      type: RuntimeDefault</pre>
+
+          <h4>Fix 3: Remove ACTIONS_ALLOW_UNSECURE_COMMANDS (~5 min)</h4>
+          <pre>--- a/.github/workflows/ci-pr.yaml
++++ b/.github/workflows/ci-pr.yaml
+     - name: Build + Deploy PR images to GKE
+       env:
+-        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+         PR_NUMBER: ${{ github.event.pull_request.number }}</pre>
+
+          <h4>Fix 4: Add npm audit to CI pipeline (~15 min)</h4>
+          <pre>--- a/.github/workflows/ci-pr.yaml
++++ b/.github/workflows/ci-pr.yaml
++    - name: Dependency Vulnerability Scan
++      timeout-minutes: 5
++      run: |
++        cd src/paymentservice && npm audit --audit-level=high
++        cd ../currencyservice && npm audit --audit-level=high</pre>
+
+          <h4>Fix 5: Add redis-cart ServiceAccount (~5 min)</h4>
+          <pre>--- a/kubernetes-manifests/cartservice.yaml
++++ b/kubernetes-manifests/cartservice.yaml
++---
++apiVersion: v1
++kind: ServiceAccount
++metadata:
++  name: redis-cart
++automountServiceAccountToken: false
+ ---
+ spec:
++  serviceAccountName: redis-cart
++  automountServiceAccountToken: false
+   securityContext:
+     fsGroup: 1000</pre>
+
+          <div class="pr-description">fix(compliance): SOC2 quick-win hardening — token mount, seccomp, CI security
+
+Apply 5 CIS/SOC2 quick fixes identified in compliance audit (2026-05-12):
+
+- Set automountServiceAccountToken: false on all 12 ServiceAccounts + Pod specs (CC6.2)
+- Add seccompProfile: RuntimeDefault to all pod securityContexts (CIS 5.7.2)
+- Remove deprecated ACTIONS_ALLOW_UNSECURE_COMMANDS from CI workflows (CC8.1)
+- Add npm audit --audit-level=high gate to CI for paymentservice + currencyservice (CC7.1)
+- Add dedicated redis-cart ServiceAccount with token mount disabled (CC6.2)
+
+Compliance score impact: +12 points estimated (34 → ~46)
+Controls addressed: CC6.2 (partial→pass), CC8.1 (partial improvement), CIS 5.7.2</div>
+        </div>
+      </div>
+
+      <div class="section" id="fix-this-sprint">
+        <h2>Fix This Sprint</h2>
+        <table>
+          <thead><tr><th>Action</th><th>Effort</th><th>Control IDs</th><th>Compliance Impact</th></tr></thead>
+          <tbody>
+            <tr><td>Parameterize SQL in AlloyDBCartStore.cs:69 (use NpgsqlCommand @params)</td><td>1 day</td><td>CC7.1</td><td>Removes SQL injection; critical risk eliminated</td></tr>
+            <tr><td>Upgrade paymentservice: sdk-node →0.217.0, replace otlp-grpc exporter</td><td>1 day</td><td>CC7.1</td><td>Eliminates 3 of 5 critical CVEs</td></tr>
+            <tr><td>Downgrade @google-cloud/profiler →0.1.4 (resolves protobufjs CVSS 9.8 + tar chain)</td><td>0.5 day</td><td>CC7.1</td><td>Eliminates protobufjs CVSS 9.8 — highest risk item</td></tr>
+            <tr><td>Deploy all services to a dedicated namespace (online-boutique)</td><td>0.5 day</td><td>CC6.6, CIS 5.7.4</td><td>Enables namespace-scoped RBAC and PSA labels</td></tr>
+            <tr><td>Promote NetworkPolicy kustomize component into base manifests</td><td>0.5 day</td><td>CC6.6</td><td>Enforces least-privilege pod networking by default</td></tr>
+            <tr><td>Fix PGPASSWORD global scope in shoppingassistantservice.py</td><td>0.5 day</td><td>CC6.8</td><td>Reduces credential exposure window in memory</td></tr>
+            <tr><td>Add Trivy container image scanning to CI</td><td>1 day</td><td>CC7.1, CC8.1</td><td>Automated CVE detection on every build</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section" id="plan-next-quarter">
+        <h2>Plan For Next Quarter</h2>
+        <div class="roadmap-item">
+          <div class="roadmap-priority priority-1">P1</div>
+          <div>
+            <h4>Enable Istio mTLS STRICT mode + AuthorizationPolicies</h4>
+            <p>Enables authenticated service-to-service communication. Prerequisite for SOC 2 CC6.1 pass. Effort: 2 weeks. Prerequisite: dedicated namespace.</p>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-priority priority-1">P1</div>
+          <div>
+            <h4>Enable audit logging and observability pipeline</h4>
+            <p>Promote google-cloud-operations to base. Add structured audit events to checkout and payment flows. Configure Cloud Logging with 90-day retention. Effort: 1 week.</p>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-priority priority-1">P1</div>
+          <div>
+            <h4>Enable TLS on frontend-external (HTTPS:443)</h4>
+            <p>Terminate TLS at the ingress/load balancer. Required for PCI-DSS 4.2.1 and SOC 2 CC6.7. Effort: 3 days.</p>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-priority priority-2">P2</div>
+          <div>
+            <h4>Create least-privilege AlloyDB application user</h4>
+            <p>Replace hardcoded <code>postgres</code> superuser with a scoped application user. Applies to both cartservice and shoppingassistantservice. Effort: 1 day.</p>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-priority priority-2">P2</div>
+          <div>
+            <h4>Write Incident Response Plan and security policies</h4>
+            <p>Document IRP, data classification policy, access review process, and security awareness training. Required artifacts for SOC 2 CC2.2. Effort: 2 weeks (policy team).</p>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-priority priority-2">P2</div>
+          <div>
+            <h4>Persist Redis cart data and implement backup strategy</h4>
+            <p>Replace emptyDir with a PersistentVolumeClaim or switch to Cloud Memorystore. Define backup schedule. Required for SOC 2 A1.2. Effort: 1 week.</p>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-priority priority-3">P3</div>
+          <div>
+            <h4>Add HPA and multi-replica deployments for critical services</h4>
+            <p>Configure HorizontalPodAutoscaler for frontend, checkoutservice, and paymentservice. Define minimum 2 replicas. Effort: 2 days.</p>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-priority priority-3">P3</div>
+          <div>
+            <h4>Add unit tests for Python, Node.js, and Java services to CI</h4>
+            <p>5 of 12 services have no unit tests in CI pipeline. Required for CC8.1 full pass. Effort: 2&ndash;3 weeks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" id="decisions">
+        <h2>Decisions to Make</h2>
+
+        <div class="decision-card">
+          <h4>Decision: Service Mesh vs Manual mTLS</h4>
+          <p>Authentication between microservices is absent. Two paths exist: enable Istio (already partially configured as an optional overlay) or implement application-level auth tokens manually.</p>
+          <div class="inaction-cost"><strong>Cost of inaction:</strong> Any compromised pod has unauthenticated access to payment and checkout services. Fails SOC 2 CC6.1 indefinitely.</div>
+          <div class="option-grid">
+            <div class="option-card">
+              <h5>Option A: Enable Istio mTLS (Recommended)</h5>
+              <p>Istio overlay already exists in <code>kustomize/components/service-mesh-istio/</code>. Set <code>PeerAuthentication: STRICT</code> + <code>AuthorizationPolicies</code>. ~1 week effort. Transparent to application code.</p>
+            </div>
+            <div class="option-card">
+              <h5>Option B: Application-level JWT auth</h5>
+              <p>Add auth interceptors to each gRPC service. Higher effort (8&ndash;12 weeks), requires changes to all 12 services, higher maintenance burden. Full control over token lifecycle.</p>
+            </div>
+          </div>
+          <p><strong>Recommendation:</strong> Option A. Istio infrastructure is already present and tested in CI. Enables mTLS and AuthorizationPolicies without application code changes.</p>
+        </div>
+
+        <div class="decision-card">
+          <h4>Decision: Redis Persistence Strategy</h4>
+          <p>Redis cart data uses <code>emptyDir</code> — every pod restart loses all active shopping carts. Two options for persistence.</p>
+          <div class="inaction-cost"><strong>Cost of inaction:</strong> Cart data loss on every deployment. Fails SOC 2 A1.2 availability requirement. Customer-facing data loss event.</div>
+          <div class="option-grid">
+            <div class="option-card">
+              <h5>Option A: Cloud Memorystore (Recommended)</h5>
+              <p>Replace in-cluster Redis with GCP Memorystore. Managed backups, HA, no emptyDir. Memorystore kustomize component already exists at <code>kustomize/components/memorystore/</code>.</p>
+            </div>
+            <div class="option-card">
+              <h5>Option B: PersistentVolumeClaim</h5>
+              <p>Add a PVC to the redis-cart Deployment. Cheaper, self-managed. Requires configuring backup jobs separately. Less HA than Memorystore.</p>
+            </div>
+          </div>
+          <p><strong>Recommendation:</strong> Option A. Memorystore component already exists in the repo — lowest effort path to durable, HA cart storage.</p>
+        </div>
+      </div>
+
+      <div class="section" id="audit-readiness">
+        <h2>Audit Readiness Checklist</h2>
+
+        <div class="checklist-item"><span class="check-icon">❌</span><span><strong>CC6.1</strong> — Authentication enforced on all service endpoints and external interfaces</span></div>
+        <div class="checklist-item"><span class="check-icon">❌</span><span><strong>CC6.2</strong> — Kubernetes API tokens disabled on all workloads (<code>automountServiceAccountToken: false</code>)</span></div>
+        <div class="checklist-item"><span class="check-icon">❌</span><span><strong>CC6.3</strong> — RBAC Roles and RoleBindings defined with least-privilege permissions</span></div>
+        <div class="checklist-item"><span class="check-icon">⚠️</span><span><strong>CC6.6</strong> — NetworkPolicies in base deployment (exists as opt-in kustomize component)</span></div>
+        <div class="checklist-item"><span class="check-icon">⚠️</span><span><strong>CC6.7</strong> — TLS on external endpoints (HTTP:80 unencrypted)</span></div>
+        <div class="checklist-item"><span class="check-icon">⚠️</span><span><strong>CC6.8</strong> — Secrets management (Secret Manager used; PGPASSWORD scope issue)</span></div>
+        <div class="checklist-item"><span class="check-icon">❌</span><span><strong>CC7.1</strong> — All critical CVEs patched and vulnerability scanning in CI</span></div>
+        <div class="checklist-item"><span class="check-icon">❌</span><span><strong>CC7.2</strong> — Audit logging enabled for all security-relevant events</span></div>
+        <div class="checklist-item"><span class="check-icon">⚠️</span><span><strong>CC8.1</strong> — CI pipeline includes SAST, dependency scanning, and container scanning</span></div>
+        <div class="checklist-item"><span class="check-icon">❌</span><span><strong>A1.2</strong> — Data persistence and backup strategy for all stateful services</span></div>
+        <div class="checklist-item"><span class="check-icon">❌</span><span><strong>CC2.2</strong> — Formal incident response plan documented and tested</span></div>
+        <div class="checklist-item"><span class="check-icon">❌</span><span><strong>CC2.2</strong> — Data classification policy in place</span></div>
+        <div class="checklist-item"><span class="check-icon">❌</span><span><strong>CC2.2</strong> — Security awareness training records available</span></div>
+        <div class="checklist-item"><span class="check-icon">✅</span><span><strong>CC6.8</strong> — No secrets committed to source control (gitleaks: 0 findings)</span></div>
+        <div class="checklist-item"><span class="check-icon">✅</span><span><strong>CC6.8</strong> — Container images use non-root user and SHA256-pinned base images</span></div>
+        <div class="checklist-item"><span class="check-icon">✅</span><span><strong>CC6.1</strong> — Vulnerability disclosure process documented (SECURITY.md)</span></div>
+        <div class="checklist-item"><span class="check-icon">✅</span><span><strong>CC8.1</strong> — Reproducible builds via Skaffold with isolated PR staging environments</span></div>
+
+      </div>
+      </div>
+
+      <div class="footer">
+        <div class="footer-logo">
+          <img class="logo-light" src="https://agent.opsera.ai/opsera_logo_transparent.png" alt="Opsera">
+          <img class="logo-dark" src="https://agent.opsera.ai/opsera_logo_white_horizontal.png" alt="Opsera">
+        </div>
+        Generated by Opsera DevOps Agent | SOC 2 Compliance Audit | microservices-demo | 2026-05-12
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      var html = document.documentElement;
+      var current = html.getAttribute('data-theme');
+      var next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      try { localStorage.setItem('opsera-report-theme', next); } catch(e) {}
+    }
+    (function() {
+      try {
+        var saved = localStorage.getItem('opsera-report-theme');
+        if (saved) document.documentElement.setAttribute('data-theme', saved);
+      } catch(e) {}
+    })();
+    mermaid.initialize({
+      startOnLoad: true, theme: 'neutral', securityLevel: 'loose',
+      flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis', padding: 20 },
+      themeVariables: {
+        background: '#ffffff', primaryColor: '#ede5f7', primaryTextColor: '#3D3B36',
+        primaryBorderColor: '#9947EB', lineColor: '#67788d', textColor: '#3D3B36'
+      }
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+      var links = document.querySelectorAll('.sidebar-link[href^="#"]');
+      var sections = [];
+      links.forEach(function(link) {
+        var id = link.getAttribute('href').slice(1);
+        var el = document.getElementById(id);
+        if (el) sections.push({ id: id, el: el, link: link });
+      });
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            links.forEach(function(l) { l.classList.remove('active'); });
+            var match = sections.find(function(s) { return s.el === entry.target; });
+            if (match) {
+              match.link.classList.add('active');
+              match.link.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+          }
+        });
+      }, { rootMargin: '-10% 0px -80% 0px', threshold: 0 });
+      sections.forEach(function(s) { observer.observe(s.el); });
+      var sidebar = document.getElementById('sidebar');
+      var toggle = document.getElementById('sidebarToggle');
+      var overlay = document.getElementById('sidebarOverlay');
+      function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('open'); }
+      toggle.addEventListener('click', function() {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('open');
+      });
+      overlay.addEventListener('click', closeSidebar);
+      links.forEach(function(link) {
+        link.addEventListener('click', function() {
+          if (window.innerWidth <= 900) closeSidebar();
+        });
+      });
+    });
+  </script>
+</body>
+</html>

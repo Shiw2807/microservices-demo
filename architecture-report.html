@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecture Risk Report — Online Boutique (microservices-demo)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f1117; color: #e2e8f0; line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #1a1f2e 0%, #0f1117 100%); border-bottom: 1px solid #2d3748; padding: 2rem 3rem; }
+  .header h1 { font-size: 1.8rem; font-weight: 700; color: #fff; }
+  .header .subtitle { color: #718096; font-size: 0.9rem; margin-top: 0.3rem; }
+  .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; margin-left: 0.75rem; }
+  .badge-medium { background: #744210; color: #fbd38d; }
+  .badge-critical { background: #742a2a; color: #feb2b2; }
+  .badge-high { background: #7b341e; color: #fbd38d; }
+  .badge-warn { background: #3d3d14; color: #faf089; }
+  .badge-low { background: #1a365d; color: #90cdf4; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 2rem 3rem; }
+  .score-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+  .score-card { background: #1a202c; border: 1px solid #2d3748; border-radius: 0.75rem; padding: 1.25rem; text-align: center; }
+  .score-card .value { font-size: 2rem; font-weight: 700; }
+  .score-card .label { font-size: 0.75rem; color: #718096; margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .score-card.critical .value { color: #fc8181; }
+  .score-card.high .value { color: #f6ad55; }
+  .score-card.medium .value { color: #faf089; }
+  .score-card.score-main .value { color: #68d391; font-size: 3rem; }
+  section { margin-bottom: 2.5rem; }
+  section h2 { font-size: 1.1rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; border-bottom: 1px solid #2d3748; padding-bottom: 0.5rem; }
+  .risk-card { background: #1a202c; border: 1px solid #2d3748; border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 0.75rem; border-left: 4px solid #4a5568; }
+  .risk-card.critical { border-left-color: #fc8181; }
+  .risk-card.high { border-left-color: #f6ad55; }
+  .risk-card.medium { border-left-color: #faf089; }
+  .risk-card.low { border-left-color: #63b3ed; }
+  .risk-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+  .risk-title { font-weight: 600; color: #e2e8f0; }
+  .risk-desc { color: #a0aec0; font-size: 0.9rem; margin-bottom: 0.5rem; }
+  .risk-worst { color: #fc8181; font-size: 0.85rem; }
+  .risk-worst span { color: #718096; }
+  .evidence { font-size: 0.75rem; color: #63b3ed; margin-top: 0.4rem; font-family: monospace; }
+  .stride-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .stride-card { background: #1a202c; border: 1px solid #2d3748; border-radius: 0.75rem; padding: 1rem; }
+  .stride-card h3 { font-size: 0.85rem; font-weight: 600; color: #a0aec0; margin-bottom: 0.5rem; }
+  .stride-card .count { font-size: 1.5rem; font-weight: 700; color: #fc8181; }
+  .stride-card ul { list-style: disc; padding-left: 1rem; font-size: 0.8rem; color: #718096; margin-top: 0.4rem; }
+  .boundary-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .boundary-table th { background: #2d3748; color: #a0aec0; padding: 0.6rem 1rem; text-align: left; font-weight: 600; }
+  .boundary-table td { border-bottom: 1px solid #2d3748; padding: 0.6rem 1rem; color: #e2e8f0; }
+  .boundary-table tr:hover td { background: #1a202c; }
+  .tag { display: inline-block; background: #2d3748; color: #a0aec0; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 0.25rem; margin-right: 0.25rem; font-family: monospace; }
+  .remediation-item { background: #1a202c; border: 1px solid #2d3748; border-radius: 0.5rem; padding: 1rem; margin-bottom: 0.5rem; display: flex; gap: 1rem; align-items: flex-start; }
+  .remediation-item .priority { font-size: 0.75rem; font-weight: 600; min-width: 60px; text-align: center; padding: 0.25rem 0.5rem; border-radius: 0.25rem; }
+  .priority-1 { background: #742a2a; color: #feb2b2; }
+  .priority-2 { background: #7b341e; color: #fbd38d; }
+  .priority-3 { background: #744210; color: #fbd38d; }
+  .remediation-item .action { font-size: 0.85rem; color: #e2e8f0; }
+  .remediation-item .file { font-size: 0.75rem; color: #718096; font-family: monospace; margin-top: 0.2rem; }
+  .footer { border-top: 1px solid #2d3748; padding: 1.5rem 3rem; color: #4a5568; font-size: 0.8rem; text-align: center; }
+  .arch-diagram { background: #1a202c; border: 1px solid #2d3748; border-radius: 0.75rem; padding: 1.5rem; font-family: monospace; font-size: 0.8rem; line-height: 1.8; color: #a0aec0; }
+  .flow-line { margin: 0.1rem 0; }
+  .danger { color: #fc8181; }
+  .warn { color: #f6ad55; }
+  .ok { color: #68d391; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Architecture Risk Report <span class="badge badge-medium">Score: 32 / 100 — Low</span></h1>
+  <div class="subtitle">Online Boutique (microservices-demo) &nbsp;|&nbsp; Powered by Opsera &nbsp;|&nbsp; Generated 2026-05-13</div>
+</div>
+
+<div class="container">
+
+  <!-- Score summary -->
+  <div class="score-grid" style="margin-top:1.5rem;">
+    <div class="score-card score-main">
+      <div class="value">32</div>
+      <div class="label">Overall Score</div>
+    </div>
+    <div class="score-card critical">
+      <div class="value">2</div>
+      <div class="label">Critical Risks</div>
+    </div>
+    <div class="score-card high">
+      <div class="value">6</div>
+      <div class="label">High Risks</div>
+    </div>
+    <div class="score-card medium">
+      <div class="value">7</div>
+      <div class="label">Med / Low Risks</div>
+    </div>
+  </div>
+
+  <!-- Architecture Overview -->
+  <section>
+    <h2>Architecture Overview</h2>
+    <div class="arch-diagram">
+      <div class="flow-line"><span class="warn">Browser</span> ──[HTTP:80 No TLS]──→ <span class="danger">frontend (Go, port 8080)</span></div>
+      <div class="flow-line">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│ <span class="danger">grpc.WithInsecure() on all 8 connections</span></div>
+      <div class="flow-line">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┌──────────────┼──────────────────────────────────┐</div>
+      <div class="flow-line">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓</div>
+      <div class="flow-line"><span class="ok">cartservice (C#, 7070)</span>  <span class="ok">productcatalog (Go, 3550)</span>  <span class="ok">checkoutservice (Go, 5050)</span></div>
+      <div class="flow-line">&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│ <span class="danger">[orchestrates 6 services synchronously — no circuit breakers]</span></div>
+      <div class="flow-line">&nbsp;&nbsp;&nbsp;&nbsp;↓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├──→ <span class="danger">paymentservice (Node.js, 50051) — insecure, no auth, logs card data</span></div>
+      <div class="flow-line"><span class="danger">Redis :6379 (emptyDir, no TLS,</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├──→ <span class="ok">shippingservice (Go, 50051)</span></div>
+      <div class="flow-line"><span class="danger">no auth, SPOF, data lost on restart)</span>&nbsp;&nbsp;&nbsp;&nbsp;├──→ <span class="ok">emailservice (Python, 5000)</span></div>
+      <div class="flow-line">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├──→ <span class="ok">currencyservice (Node.js, 7000)</span></div>
+      <div class="flow-line">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└──→ <span class="ok">recommendationservice (Python, 8080)</span></div>
+      <div class="flow-line">&nbsp;</div>
+      <div class="flow-line"><span class="warn">adservice (Java, 9555)</span>  <span class="warn">loadgenerator (Python/Locust)</span> <span class="danger">[deployed by default!]</span></div>
+    </div>
+  </section>
+
+  <!-- Critical Risks -->
+  <section>
+    <h2>Critical Risks</h2>
+
+    <div class="risk-card critical">
+      <div class="risk-header">
+        <span class="badge badge-critical">CRITICAL</span>
+        <span class="risk-title">All gRPC Communications are Plaintext — Payment Card Data Exposed on Wire</span>
+      </div>
+      <div class="risk-desc">Every inter-service gRPC call uses <code>grpc.WithInsecure()</code> (clients) and <code>grpc.ServerCredentials.createInsecure()</code> (paymentservice server). Credit card data traverses the full path — browser → frontend → checkoutservice → paymentservice — entirely unencrypted. Any pod with cluster network access can perform a man-in-the-middle attack and capture payment data.</div>
+      <div class="risk-worst"><span>Worst case: </span>Attacker deploys a rogue pod in the namespace, intercepts gRPC streams, captures all credit card numbers, CVVs, and billing addresses in transit.</div>
+      <div class="evidence">src/frontend/main.go:mustConnGRPC (grpc.WithInsecure) · src/paymentservice/server.js:createInsecure()</div>
+    </div>
+
+    <div class="risk-card critical">
+      <div class="risk-header">
+        <span class="badge badge-critical">CRITICAL</span>
+        <span class="risk-title">No Service-to-Service Authentication — PaymentService Open to Any Pod</span>
+      </div>
+      <div class="risk-desc">PaymentService (and all internal services) have zero authentication. No mTLS, no service accounts, no API keys. NetworkPolicies are opt-in only (<code>authorizationPolicies.create: false</code> in Helm). Any pod in the Kubernetes cluster — including a compromised workload — can call <code>PaymentService.Charge</code> with arbitrary parameters.</div>
+      <div class="risk-worst"><span>Worst case: </span>Compromised pod calls PaymentService.Charge with crafted amounts and arbitrary card data, processing fraudulent transactions bypassing all business logic.</div>
+      <div class="evidence">src/paymentservice/server.js · helm-chart/values.yaml (authorizationPolicies.create: false) · kubernetes-manifests/paymentservice.yaml</div>
+    </div>
+  </section>
+
+  <!-- High Risks -->
+  <section>
+    <h2>High Risks</h2>
+
+    <div class="risk-card high">
+      <div class="risk-header">
+        <span class="badge badge-high">HIGH</span>
+        <span class="risk-title">Redis Cart Storage is Ephemeral (emptyDir) — All Cart Data Lost on Pod Restart</span>
+      </div>
+      <div class="risk-desc">Redis uses an <code>emptyDir</code> volume. Any Redis pod restart, OOM eviction, or node migration destroys all shopping cart data permanently for every active user. Session cookies live 48 hours but the backing store can disappear at any time.</div>
+      <div class="risk-worst"><span>Worst case: </span>Redis OOM-killed during peak traffic — all user carts wiped, checkout impossible until Redis restarts with empty state, no recovery path.</div>
+      <div class="evidence">kubernetes-manifests/cartservice.yaml (volumes: - emptyDir: {})</div>
+    </div>
+
+    <div class="risk-card high">
+      <div class="risk-header">
+        <span class="badge badge-high">HIGH</span>
+        <span class="risk-title">Redis is a Single Point of Failure for All Checkout Operations</span>
+      </div>
+      <div class="risk-desc">A single Redis pod with no replication, no sentinel, and no HA. cartservice is unavailable when Redis is down. checkoutservice calls cartservice for every order. Redis failure = complete checkout failure for all users simultaneously.</div>
+      <div class="risk-worst"><span>Worst case: </span>Redis pod dies → cartservice throws → checkoutservice fails → all purchase attempts fail until Redis recovers.</div>
+      <div class="evidence">kubernetes-manifests/cartservice.yaml · src/checkoutservice/main.go</div>
+    </div>
+
+    <div class="risk-card high">
+      <div class="risk-header">
+        <span class="badge badge-high">HIGH</span>
+        <span class="risk-title">Frontend Panics at Startup When SHOPPING_ASSISTANT_SERVICE_ADDR Missing</span>
+      </div>
+      <div class="risk-desc"><code>mustMapEnv</code> is called unconditionally for <code>SHOPPING_ASSISTANT_SERVICE_ADDR</code> even when the shopping assistant feature is disabled by default. The env var is not set in the base kubernetes manifests. Any deployment that doesn't explicitly add this variable will CrashLoopBackOff immediately.</div>
+      <div class="risk-worst"><span>Worst case: </span>Production upgrade without assistant component → frontend pod enters CrashLoopBackOff → entire storefront down.</div>
+      <div class="evidence">src/frontend/main.go:mustMapEnv(&amp;svc.shoppingAssistantSvcAddr, "SHOPPING_ASSISTANT_SERVICE_ADDR")</div>
+    </div>
+
+    <div class="risk-card high">
+      <div class="risk-header">
+        <span class="badge badge-high">HIGH</span>
+        <span class="risk-title">Session Cookie Missing Secure, HttpOnly, and SameSite Flags</span>
+      </div>
+      <div class="risk-desc">The session cookie is set with only <code>Name</code>, <code>Value</code>, and <code>MaxAge</code>. Missing <code>HttpOnly</code> makes it readable by JavaScript (XSS). Missing <code>Secure</code> sends it over HTTP. Missing <code>SameSite</code> allows CSRF attacks on cart and checkout endpoints.</div>
+      <div class="risk-worst"><span>Worst case: </span>XSS payload in ad content reads session cookie → attacker hijacks session → places fraudulent orders under victim identity.</div>
+      <div class="evidence">src/frontend/middleware.go:http.SetCookie (no Secure/HttpOnly/SameSite)</div>
+    </div>
+
+    <div class="risk-card high">
+      <div class="risk-header">
+        <span class="badge badge-high">HIGH</span>
+        <span class="risk-title">No Rate Limiting on Frontend — DDoS Amplification Risk</span>
+      </div>
+      <div class="risk-desc">The frontend HTTP server has no rate limiting middleware. With CPU limit of 200m and memory limit of 128Mi, the pod is trivially exhausted. currencyservice (highest QPS service) has no downstream rate protection either.</div>
+      <div class="risk-worst"><span>Worst case: </span>Attacker floods frontend with requests → resource limits hit → frontend OOMs → all 11 microservices starved of requests, complete outage.</div>
+      <div class="evidence">src/frontend/main.go · kubernetes-manifests/frontend.yaml (limits: cpu:200m memory:128Mi)</div>
+    </div>
+
+    <div class="risk-card high">
+      <div class="risk-header">
+        <span class="badge badge-high">HIGH</span>
+        <span class="risk-title">No Circuit Breakers in checkoutservice — Cascading Failure Risk</span>
+      </div>
+      <div class="risk-desc">checkoutservice synchronously orchestrates 6 downstream services (cart, product catalog, shipping, payment, email, currency) with no circuit breakers, retries with backoff, or graceful degradation. A slow or unavailable dependency blocks the entire checkout flow.</div>
+      <div class="risk-worst"><span>Worst case: </span>emailservice slow or rate-limited → all checkout goroutines block → checkout pod exhausts memory → complete checkout failure.</div>
+      <div class="evidence">src/checkoutservice/main.go</div>
+    </div>
+  </section>
+
+  <!-- Medium Risks -->
+  <section>
+    <h2>Medium &amp; Low Risks</h2>
+
+    <div class="risk-card medium">
+      <div class="risk-header">
+        <span class="badge badge-warn">MEDIUM</span>
+        <span class="risk-title">gRPC Connection Timeout of 3 Seconds Causes CrashLoopBackOff on Cold Starts</span>
+      </div>
+      <div class="risk-desc">All 8 gRPC connections must succeed within 3 seconds each or the frontend panics. Slow DNS, GKE node cold starts, or pod scheduling delays routinely exceed this. <code>mustConnGRPC</code> panics on timeout with no retry.</div>
+      <div class="evidence">src/frontend/main.go:mustConnGRPC (context.WithTimeout time.Second*3)</div>
+    </div>
+
+    <div class="risk-card medium">
+      <div class="risk-header">
+        <span class="badge badge-warn">MEDIUM</span>
+        <span class="risk-title">No gRPC Server-Side Request Timeouts — Goroutine Leak Under Load</span>
+      </div>
+      <div class="risk-desc">gRPC handlers in checkoutservice, shippingservice, and others have no deadline propagation or server-side timeouts. A stalled external call (e.g., payment processor timeout) holds a goroutine indefinitely.</div>
+      <div class="evidence">src/checkoutservice/main.go · src/shippingservice/main.go</div>
+    </div>
+
+    <div class="risk-card medium">
+      <div class="risk-header">
+        <span class="badge badge-warn">MEDIUM</span>
+        <span class="risk-title">Hardcoded Shared Session UUID When ENABLE_SINGLE_SHARED_SESSION Enabled</span>
+      </div>
+      <div class="risk-desc">When <code>ENABLE_SINGLE_SHARED_SESSION=true</code>, all users share the hardcoded session ID <code>12345678-1234-1234-1234-123456789123</code>. Any user can view and modify any other user's shopping cart.</div>
+      <div class="evidence">src/frontend/middleware.go:sessionID = "12345678-1234-1234-1234-123456789123"</div>
+    </div>
+
+    <div class="risk-card medium">
+      <div class="risk-header">
+        <span class="badge badge-warn">MEDIUM</span>
+        <span class="risk-title">cartservice Silent Fallback to In-Memory Store When No DB Configured</span>
+      </div>
+      <div class="risk-desc">If REDIS_ADDR, SPANNER_PROJECT, SPANNER_CONNECTION_STRING, and ALLOYDB_PRIMARY_IP are all unset, cartservice silently uses an in-memory distributed cache. Cart data is per-pod and lost on every restart. No operator warning emitted.</div>
+      <div class="evidence">src/cartservice/src/Startup.cs (AddDistributedMemoryCache fallback)</div>
+    </div>
+
+    <div class="risk-card medium">
+      <div class="risk-header">
+        <span class="badge badge-warn">MEDIUM</span>
+        <span class="risk-title">loadgenerator Deployed by Default in Production Helm Chart</span>
+      </div>
+      <div class="risk-desc"><code>loadGenerator.create: true</code> in Helm values deploys a Locust load generator alongside production services by default, generating continuous synthetic shopping traffic that consumes real resources and inflates metrics.</div>
+      <div class="evidence">helm-chart/values.yaml (loadGenerator.create: true)</div>
+    </div>
+
+    <div class="risk-card low">
+      <div class="risk-header">
+        <span class="badge badge-low">LOW</span>
+        <span class="risk-title">PaymentService Logs Full Request Including Credit Card Data</span>
+      </div>
+      <div class="risk-desc"><code>logger.info(`PaymentService#Charge invoked with request ${JSON.stringify(call.request)}`)</code> logs the complete ChargeRequest including credit card number, CVV, and expiry to stdout, which is collected by any log aggregation system.</div>
+      <div class="evidence">src/paymentservice/server.js:logger.info JSON.stringify(call.request)</div>
+    </div>
+
+    <div class="risk-card low">
+      <div class="risk-header">
+        <span class="badge badge-low">LOW</span>
+        <span class="risk-title">Zero Human Commits in 6 Months — Effectively Unmaintained</span>
+      </div>
+      <div class="risk-desc">84 of 93 recent commits are from bots (Mend Renovate: 67, Dependabot: 17). Zero human commits in the last 6 months. Last human commit: 2025-10-15. No active maintainer to respond to CVEs or architectural issues.</div>
+      <div class="evidence">git log --since='6 months ago' (0 commits)</div>
+    </div>
+  </section>
+
+  <!-- Config Contradictions -->
+  <section>
+    <h2>Configuration Contradictions</h2>
+    <div style="overflow-x:auto;">
+    <table class="boundary-table">
+      <thead>
+        <tr><th>Type</th><th>Config A</th><th>Config B</th><th>Issue</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag">env_mismatch</span></td>
+          <td>ENABLE_ASSISTANT=not set (feature disabled by default)</td>
+          <td>mustMapEnv("SHOPPING_ASSISTANT_SERVICE_ADDR") called unconditionally<br><em>src/frontend/main.go</em></td>
+          <td style="color:#fc8181">Feature disabled but address env var required → CrashLoopBackOff</td>
+        </tr>
+        <tr>
+          <td><span class="tag">tls_mixed</span></td>
+          <td>grpc.WithInsecure() on all 8 client connections<br><em>src/frontend/main.go</em></td>
+          <td>Credit card data transmitted across those same connections<br><em>src/checkoutservice/main.go</em></td>
+          <td style="color:#fc8181">PCI-sensitive payment data over completely unencrypted gRPC</td>
+        </tr>
+        <tr>
+          <td><span class="tag">state_incoherence</span></td>
+          <td>Redis emptyDir volume (no persistence)<br><em>kubernetes-manifests/cartservice.yaml</em></td>
+          <td>Session cookie TTL = 48 hours<br><em>src/frontend/main.go:cookieMaxAge</em></td>
+          <td style="color:#f6ad55">Cart lost on Redis restart within valid 48h user session → silent data loss</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <!-- STRIDE -->
+  <section>
+    <h2>STRIDE Threat Classification</h2>
+    <div class="stride-grid">
+      <div class="stride-card">
+        <h3>Spoofing (S)</h3>
+        <div class="count">3 threats</div>
+        <ul>
+          <li>Any pod can impersonate a legitimate service caller — no mTLS</li>
+          <li>Session ID theft = full account takeover</li>
+          <li>Hardcoded shared session UUID trivially predictable</li>
+        </ul>
+      </div>
+      <div class="stride-card">
+        <h3>Tampering (T)</h3>
+        <div class="count">3 threats</div>
+        <ul>
+          <li>Plaintext gRPC — MITM can modify payment amounts in transit</li>
+          <li>No CSRF protection on cart/checkout</li>
+          <li>No input validation on PaymentService charge handler</li>
+        </ul>
+      </div>
+      <div class="stride-card">
+        <h3>Repudiation (R)</h3>
+        <div class="count">2 threats</div>
+        <ul>
+          <li>No structured audit trail for payment transactions</li>
+          <li>Swallowed errors hide evidence in service logs</li>
+        </ul>
+      </div>
+      <div class="stride-card">
+        <h3>Information Disclosure (I)</h3>
+        <div class="count">3 threats</div>
+        <ul>
+          <li>Payment card data plaintext on wire</li>
+          <li>Session cookie readable by JavaScript (no HttpOnly)</li>
+          <li>PaymentService logs full card data via JSON.stringify</li>
+        </ul>
+      </div>
+      <div class="stride-card">
+        <h3>Denial of Service (D)</h3>
+        <div class="count">4 threats</div>
+        <ul>
+          <li>No rate limiting on frontend</li>
+          <li>Redis SPOF for all checkout</li>
+          <li>No circuit breakers in checkoutservice</li>
+          <li>No gRPC server timeouts → goroutine leak</li>
+        </ul>
+      </div>
+      <div class="stride-card">
+        <h3>Elevation of Privilege (E)</h3>
+        <div class="count">2 threats</div>
+        <ul>
+          <li>Any pod calls PaymentService.Charge without auth</li>
+          <li>No NetworkPolicies by default</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trust Boundaries -->
+  <section>
+    <h2>Trust Boundaries</h2>
+    <div style="overflow-x:auto;">
+    <table class="boundary-table">
+      <thead>
+        <tr><th>Boundary</th><th>From</th><th>To</th><th>Protocol</th><th>Auth</th><th>Data Crossing</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Internet → App</td>
+          <td>Browser</td>
+          <td>frontend (LoadBalancer :80)</td>
+          <td style="color:#fc8181">HTTP (no TLS)</td>
+          <td style="color:#fc8181">None</td>
+          <td>User input, payment card forms</td>
+        </tr>
+        <tr>
+          <td>Frontend → Backend</td>
+          <td>frontend pod</td>
+          <td>All 8 gRPC services</td>
+          <td style="color:#fc8181">gRPC plaintext</td>
+          <td style="color:#fc8181">None</td>
+          <td>Cart, payment card data, addresses</td>
+        </tr>
+        <tr>
+          <td>Checkout → Payment</td>
+          <td>checkoutservice</td>
+          <td>paymentservice, shippingservice, emailservice</td>
+          <td style="color:#fc8181">gRPC plaintext</td>
+          <td style="color:#fc8181">None</td>
+          <td>Credit cards, amounts, PII</td>
+        </tr>
+        <tr>
+          <td>Cart → Redis</td>
+          <td>cartservice</td>
+          <td>redis-cart :6379</td>
+          <td style="color:#fc8181">TCP no TLS</td>
+          <td style="color:#fc8181">None (no AUTH)</td>
+          <td>Session cart contents</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <!-- Remediation Roadmap -->
+  <section>
+    <h2>Remediation Roadmap</h2>
+
+    <div class="remediation-item">
+      <div class="priority priority-1">P1</div>
+      <div>
+        <div class="action">Enable mTLS for all inter-service gRPC using Istio/CSM (already available as opt-in component) or enable Kubernetes NetworkPolicies and gRPC TLS with service mesh</div>
+        <div class="file">kustomize/components/service-mesh-istio/ · helm-chart/values.yaml (authorizationPolicies.create: true)</div>
+      </div>
+    </div>
+
+    <div class="remediation-item">
+      <div class="priority priority-1">P1</div>
+      <div>
+        <div class="action">Remove JSON.stringify(call.request) from PaymentService logs. Mask or omit credit card number and CVV fields before logging.</div>
+        <div class="file">src/paymentservice/server.js:logger.info line</div>
+      </div>
+    </div>
+
+    <div class="remediation-item">
+      <div class="priority priority-1">P1</div>
+      <div>
+        <div class="action">Enable NetworkPolicies by default (not opt-in) to restrict inter-pod communication to only declared service dependencies</div>
+        <div class="file">kustomize/components/network-policies/ — move to base/kustomization.yaml</div>
+      </div>
+    </div>
+
+    <div class="remediation-item">
+      <div class="priority priority-2">P2</div>
+      <div>
+        <div class="action">Replace Redis emptyDir with a persistent volume (PVC) or use Google Cloud Memorystore. Add Redis replica for HA.</div>
+        <div class="file">kubernetes-manifests/cartservice.yaml (volumes section) · kustomize/components/memorystore/</div>
+      </div>
+    </div>
+
+    <div class="remediation-item">
+      <div class="priority priority-2">P2</div>
+      <div>
+        <div class="action">Guard mustMapEnv for SHOPPING_ASSISTANT_SERVICE_ADDR with an ENABLE_ASSISTANT env var check. Provide a default no-op address or skip connection when feature is disabled.</div>
+        <div class="file">src/frontend/main.go:mustMapEnv line for SHOPPING_ASSISTANT_SERVICE_ADDR</div>
+      </div>
+    </div>
+
+    <div class="remediation-item">
+      <div class="priority priority-2">P2</div>
+      <div>
+        <div class="action">Add HttpOnly, Secure, and SameSite=Lax flags to the session cookie to prevent XSS session theft and CSRF</div>
+        <div class="file">src/frontend/middleware.go:http.SetCookie</div>
+      </div>
+    </div>
+
+    <div class="remediation-item">
+      <div class="priority priority-2">P2</div>
+      <div>
+        <div class="action">Add HTTP rate limiting middleware to the frontend (e.g., golang.org/x/time/rate or a reverse proxy layer)</div>
+        <div class="file">src/frontend/main.go (wrap handler with rate limiter)</div>
+      </div>
+    </div>
+
+    <div class="remediation-item">
+      <div class="priority priority-3">P3</div>
+      <div>
+        <div class="action">Add circuit breakers (e.g., sony/gobreaker) in checkoutservice for each downstream service call. Add gRPC deadline propagation.</div>
+        <div class="file">src/checkoutservice/main.go</div>
+      </div>
+    </div>
+
+    <div class="remediation-item">
+      <div class="priority priority-3">P3</div>
+      <div>
+        <div class="action">Set loadGenerator.create: false in Helm default values for production deployments</div>
+        <div class="file">helm-chart/values.yaml</div>
+      </div>
+    </div>
+
+    <div class="remediation-item">
+      <div class="priority priority-3">P3</div>
+      <div>
+        <div class="action">Increase gRPC connection timeout beyond 3s or add retry logic with exponential backoff in mustConnGRPC</div>
+        <div class="file">src/frontend/main.go:mustConnGRPC</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="footer">
+  Generated by Opsera Architecture Analysis &nbsp;|&nbsp; Online Boutique (microservices-demo) &nbsp;|&nbsp; 2026-05-13 &nbsp;|&nbsp; Score: 32/100 (Low)
+</div>
+
+</body>
+</html>
